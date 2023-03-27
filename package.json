@@ -1,0 +1,27 @@
+{
+  "name": "mafia-bot",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "main": "./build/index.js",
+  "scripts": {
+    "dev": "tsc-watch --onSuccess \"node ./build/index.js\"",
+    "build": "tsc",
+    "start": "node ./build/index.js",
+    "register": "node ./build/deploy-commands.js",
+    "format": "prettier --write '**/*.{js,ts,json}'"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "prettier": "2.8.7",
+    "tsc-watch": "6.0.0",
+    "typescript": "5.0.2"
+  },
+  "dependencies": {
+    "discord.js": "14.8.0",
+    "dotenv": "16.0.3",
+    "node-json-db": "2.1.5"
+  }
+}
