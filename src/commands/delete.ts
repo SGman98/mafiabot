@@ -1,8 +1,6 @@
 import {
   ChatInputCommandInteraction,
-  GuildMember,
   PermissionFlagsBits,
-  PermissionsBitField,
   SlashCommandBuilder,
   TextChannel,
 } from "discord.js";
@@ -14,11 +12,6 @@ export const data = new SlashCommandBuilder()
   .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
 
 export async function execute(interaction: ChatInputCommandInteraction) {
-  const member = interaction.member as GuildMember;
-  if (!member.permissions.has(PermissionsBitField.Flags.Administrator)) {
-    throw new Error("You don't have permission to start the room");
-  }
-
   await interaction.deferReply({ ephemeral: true });
 
   const channel = interaction.channel as TextChannel;

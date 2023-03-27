@@ -4,7 +4,7 @@ import {
   Colors,
   EmbedBuilder,
   GuildMember,
-  PermissionsBitField,
+  PermissionFlagsBits,
   SlashCommandBuilder,
   TextChannel,
 } from "discord.js";
@@ -13,14 +13,10 @@ import { getChannel } from "../utils.js";
 
 export const data = new SlashCommandBuilder()
   .setName("start")
-  .setDescription("Start a room");
+  .setDescription("Start a room")
+  .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
 
 export async function execute(interaction: ChatInputCommandInteraction) {
-  const member = interaction.member as GuildMember;
-  if (!member.permissions.has(PermissionsBitField.Flags.Administrator)) {
-    throw new Error("You don't have permission to start the room");
-  }
-
   await interaction.deferReply({ ephemeral: true });
 
   const channel = interaction.channel as TextChannel;
@@ -73,11 +69,11 @@ export async function execute(interaction: ChatInputCommandInteraction) {
           permissionOverwrites: [
             {
               id: interaction.guild?.id,
-              deny: PermissionsBitField.Flags.ViewChannel,
+              deny: PermissionFlagsBits.ViewChannel,
             },
             ...players.map((member) => ({
               id: member.id,
-              allow: PermissionsBitField.Flags.ViewChannel,
+              allow: PermissionFlagsBits.ViewChannel,
             })),
           ],
         });

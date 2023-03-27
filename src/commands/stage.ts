@@ -2,8 +2,7 @@ import {
   ChatInputCommandInteraction,
   Colors,
   EmbedBuilder,
-  GuildMember,
-  PermissionsBitField,
+  PermissionFlagsBits,
   SlashCommandBuilder,
   TextChannel,
 } from "discord.js";
@@ -19,18 +18,14 @@ export const data = new SlashCommandBuilder()
   )
   .addSubcommand((subcommand) =>
     subcommand.setName("end").setDescription("End the current stage")
-  );
+  )
+  .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
 
 export async function endStage(
   interaction: ChatInputCommandInteraction,
   room: Room,
   stage: Stage
 ) {
-  const member = interaction.member as GuildMember;
-  if (!member.permissions.has(PermissionsBitField.Flags.Administrator)) {
-    throw new Error("You don't have permission to start the room");
-  }
-
   const votes = stage.votes.reduce((acc, vote) => {
     if (!acc[vote.to]) acc[vote.to] = 0;
     acc[vote.to]++;

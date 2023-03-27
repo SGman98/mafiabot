@@ -13,17 +13,15 @@ export const execute = async (interaction: Interaction) => {
   }
 
   console.log(
-    `The user ${interaction.user.tag} in guild ${
-      interaction.guild?.name
-    } used command ${
-      interaction.commandName
-    } with options ${interaction.options.data.map((o) => o.name)}`
+    `The user "${interaction.user.tag}" in guild "${interaction.guild?.name}" used command /${interaction.commandName}`
   );
 
   try {
     await command.execute(interaction);
   } catch (error) {
-    console.error(error);
+    console.log(
+      `Error executing command /${interaction.commandName}: ${error.message}`
+    );
     if (interaction.replied || interaction.deferred) {
       await interaction.followUp({
         content: `Error: ${error.message}`,
