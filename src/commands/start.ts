@@ -8,7 +8,7 @@ import {
   SlashCommandBuilder,
   TextChannel,
 } from "discord.js";
-import { RoleType, Room, Status, db } from "../db.js";
+import { RoleType, Room, Status, getRoomDB } from "../db.js";
 import { getChannel } from "../utils.js";
 
 export const data = new SlashCommandBuilder()
@@ -16,15 +16,18 @@ export const data = new SlashCommandBuilder()
   .setDescription("Start a room");
 
 export async function execute(interaction: ChatInputCommandInteraction) {
+  const member = interaction.member as GuildMember;
+  if (!member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+    throw new Error("You don't have permission to start the room");
+  }
+
   await interaction.deferReply({ ephemeral: true });
 
   const channel = interaction.channel as TextChannel;
   const roomName = channel.parent?.name.replace("room-", "");
   if (!roomName) throw new Error("You are not in a room");
 
-  const rooms = await db.getObject<Room[]>("/rooms");
-  const room = rooms.find((room) => room.name === roomName);
-  if (!room) throw new Error(`Room ${roomName} does not exist`);
+  const room = await getRoomDB(roomName).getObject<Room>("/");
 
   // if (room.players.length < 4) {
   //   throw new Error("La sala debe tener al menos 4 jugadores");
@@ -118,8 +121,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       embeds: [roleEmbed, abilitiesEmbed],
     });
 
-    await db.push(`/rooms[${rooms.indexOf(room)}]/players`, playersRandomized);
-    await db.push(`/rooms[${rooms.indexOf(room)}]/status`, Status.Playing);
+    await getRoomDB(roomName).push(`/players`, playersRandomized);
+    await getRoomDB(roomName).push(`/status`, Status.Playing);
   }
 
   await interaction.editReply(`Room ${roomName} started`);

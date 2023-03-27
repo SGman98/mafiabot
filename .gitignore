@@ -1,6 +1,5 @@
 Session.vim
-db.json
-db.bak.json
+db
 
 build/
 

@@ -1,10 +1,12 @@
 import {
   ChatInputCommandInteraction,
+  GuildMember,
   PermissionFlagsBits,
+  PermissionsBitField,
   SlashCommandBuilder,
   TextChannel,
 } from "discord.js";
-import { db, Room } from "../db.js";
+import { deleteRoom } from "../db.js";
 
 export const data = new SlashCommandBuilder()
   .setName("delete")
@@ -12,15 +14,17 @@ export const data = new SlashCommandBuilder()
   .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
 
 export async function execute(interaction: ChatInputCommandInteraction) {
+  const member = interaction.member as GuildMember;
+  if (!member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+    throw new Error("You don't have permission to start the room");
+  }
+
   await interaction.deferReply({ ephemeral: true });
 
   const channel = interaction.channel as TextChannel;
 
-  const rooms = await db.getObject<Room[]>("/rooms");
-
   const roomName = channel.parent?.name.replace("room-", "");
-  const room = rooms.find((room) => room.name === roomName);
-  if (!room) throw new Error(`Room ${roomName} does not exist`);
+  if (!roomName) throw new Error("Room name not found");
 
   const children = interaction.guild?.channels.cache.filter(
     (c) => c.parentId === channel.parentId
@@ -34,5 +38,5 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   if (!role) throw new Error("Role not found");
   await role.delete();
 
-  await db.delete(`/rooms[${rooms.indexOf(room)}]`);
+  await deleteRoom(roomName);
 }

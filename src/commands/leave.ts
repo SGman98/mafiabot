@@ -1,5 +1,5 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
-import { db, Room } from "../db.js";
+import { getRoomDB, getRooms } from "../db.js";
 import { getChannel } from "../utils.js";
 
 export const data = new SlashCommandBuilder()
@@ -9,10 +9,10 @@ export const data = new SlashCommandBuilder()
 export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply({ ephemeral: true });
 
-  const rooms = await db.getObject<Room[]>("/rooms");
-  const room = rooms.find((room) => {
-    return room.players.find((player) => player.id === interaction.user.id);
-  });
+  const rooms = await getRooms();
+  const room = rooms.find((room) =>
+    room.players.find((player) => player.id === interaction.user.id)
+  );
   if (!room) throw new Error("You are not in a room");
 
   const role = interaction.guild?.roles.cache.find(
@@ -27,7 +27,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     (player) => player.id !== interaction.user.id
   );
 
-  await db.push(`/rooms[${rooms.indexOf(room)}]`, room);
+  await getRoomDB(room.name).push("/players", room.players);
 
   const tc = await getChannel({ interaction, roomName: room.name });
   await tc.send({ content: `${interaction.user} has left the room` });

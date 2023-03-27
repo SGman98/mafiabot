@@ -10,7 +10,7 @@ import {
   Collection,
   TextChannel,
 } from "discord.js";
-import { RoleType, Room, db } from "./db.js";
+import { RoleType, Room, getRoomDB } from "./db.js";
 
 export async function loadCommands() {
   const commands = new Collection();
@@ -94,9 +94,7 @@ export async function getChannel({
   );
   if (!roomChannels) throw new Error("Room channels not found");
 
-  const rooms = await db.getObject<Room[]>("/rooms");
-  const room = rooms.find((room) => room.name === roomName);
-  if (!room) throw new Error(`Room ${roomName} does not exist`);
+  const room = await getRoomDB(roomName).getObject<Room>("/");
 
   let channel: TextChannel;
   if (!roles || roles.includes(RoleType.Innocent)) {

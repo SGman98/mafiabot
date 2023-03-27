@@ -2,26 +2,21 @@ import {
   ChannelType,
   ChatInputCommandInteraction,
   EmbedBuilder,
+  GuildMember,
   PermissionFlagsBits,
   PermissionsBitField,
   SlashCommandBuilder,
 } from "discord.js";
 
-import { Room, Scenario, db } from "../db.js";
+import { Room, Scenario, generalDB, getRoomDB, getRooms } from "../db.js";
 
-const scenarios = await db.getObject<Scenario[]>("/scenarios");
+const scenarios = await generalDB.getObject<Scenario[]>("/scenarios");
 
 export const data = new SlashCommandBuilder()
   .setName("create")
   .setDescription("Create a room")
   .setName("create")
   .setDescription("Create a room")
-  .addStringOption((option) =>
-    option
-      .setName("room-name")
-      .setDescription("The name of the room")
-      .setRequired(true)
-  )
   .addStringOption((option) =>
     option
       .setName("scenario")
@@ -37,16 +32,24 @@ export const data = new SlashCommandBuilder()
   .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
 
 export async function execute(interaction: ChatInputCommandInteraction) {
+  const member = interaction.member as GuildMember;
+  if (!member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+    throw new Error("You don't have permission to start the room");
+  }
+
   await interaction.deferReply({ ephemeral: true });
 
-  const roomName = interaction.options.getString("room-name")!;
+  const rooms = await getRooms();
+
+  let roomName: string;
+  while (true) {
+    roomName = Math.random().toString(36).substring(2, 8).toUpperCase();
+    if (!rooms.find((room) => room.name === roomName)) break;
+    console.log("Room name already exists, retrying");
+  }
+
   const scenarioName = interaction.options.getString("scenario")!;
-
-  const rooms = await db.getObject<Room[]>("/rooms");
-  if (rooms.find((room) => room.name === roomName))
-    throw new Error(`Room ${roomName} already exists`);
-
-  const scenarios = await db.getObject<Scenario[]>("/scenarios");
+  const scenarios = await generalDB.getObject<Scenario[]>("/scenarios");
   const scenario = scenarios.find((scenario) => scenario.name === scenarioName);
 
   if (!scenario) throw new Error(`Scenario ${scenarioName} does not exist`);
@@ -85,7 +88,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   });
   if (!tc) throw new Error("Could not create text channel");
 
-  await db.push("/rooms[]", {
+  await getRoomDB(roomName).push("/", {
     name: roomName,
     scenario,
     players: [],

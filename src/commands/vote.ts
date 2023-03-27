@@ -3,7 +3,7 @@ import {
   SlashCommandBuilder,
   TextChannel,
 } from "discord.js";
-import { Room, Status, db } from "../db.js";
+import { Room, Status, getRoomDB } from "../db.js";
 import { endStage } from "./stage.js";
 
 export const data = new SlashCommandBuilder()
@@ -21,9 +21,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   const roomName = channel.parent?.name.replace("room-", "");
   if (!roomName) throw new Error("You are not in a room");
 
-  const rooms = await db.getObject<Room[]>("/rooms");
-  const room = rooms.find((room) => room.name === roomName);
-  if (!room) throw new Error(`Room ${roomName} does not exist`);
+  const room = await getRoomDB(roomName).getObject<Room>("/");
 
   const stage = room.stages[room.stages.length - 1];
   if (!stage) throw new Error("Could not find stage");
@@ -55,8 +53,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   const votes = stage.votes.filter((vote) => vote.from !== interaction.user.id);
   votes.push({ from: interaction.user.id, to: targetUser.id });
 
-  await db.push(
-    `/rooms[${rooms.indexOf(room)}]/stages/${room.stages.length - 1}/votes`,
+  await getRoomDB(roomName).push(
+    `/stages/${room.stages.length - 1}/votes`,
     votes
   );
 
@@ -65,7 +63,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     return stage.votes.some((vote) => vote.from === player.id);
   });
   if (allPlayersVoted) {
-    await endStage(interaction, rooms, room, stage);
+    await endStage(interaction, room, stage);
   }
 
   await interaction.editReply({

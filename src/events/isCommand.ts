@@ -12,6 +12,14 @@ export const execute = async (interaction: Interaction) => {
     return;
   }
 
+  console.log(
+    `The user ${interaction.user.tag} in guild ${
+      interaction.guild?.name
+    } used command ${
+      interaction.commandName
+    } with options ${interaction.options.data.map((o) => o.name)}`
+  );
+
   try {
     await command.execute(interaction);
   } catch (error) {

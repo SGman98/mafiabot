@@ -1,0 +1,201 @@
+{
+  "scenarios": [
+    {
+      "name": "Colonia planeta X-47",
+      "theme": "Futuristic",
+      "description": "El año es 2150 y la humanidad se ha expandido por toda la galaxia. En una colonia en el planeta X-47, un grupo de personas ha sido seleccionado para establecer una nueva comunidad. Sin embargo, se ha descubierto que algunos de ellos son en realidad asesinos enviados para sabotear la misión.",
+      "image": "https://cdn.discordapp.com/attachments/1089027056106491934/1089040500390101043/SGman98_Human_colony_in_planet_X-47_with_advanced_civilization_6bb31300-bb84-49d5-b363-99ca42c29113.png",
+      "roles": [
+        {
+          "name": "Colono",
+          "type": "innocent",
+          "description": "Son los trabajadores honestos y dedicados que han sido seleccionados para establecer una nueva colonia en el planeta X-47",
+          "abilities": [
+            {
+              "name": "Votar",
+              "description": "Pueden votar en el día para ejecutar a un miembro de la colonia que sospechan que es un traidor"
+            }
+          ]
+        },
+        {
+          "name": "Médico",
+          "type": "healer",
+          "description": "Es el especialista en salud de la colonia que tiene acceso a tecnología avanzada para curar a los heridos y salvar a los colonos de la muerte",
+          "abilities": [
+            {
+              "name": "Votar",
+              "description": "Al ser un colono, pueden votar en el día para ejecutar a un miembro de la colonia que sospechan que es un traidor"
+            },
+            {
+              "name": "Curar",
+              "description": "En la noche, puede seleccionar a un colono para intentar curarlo (no sabe quien esta herido o no)"
+            }
+          ]
+        },
+        {
+          "name": "Científico",
+          "type": "investigator",
+          "description": "Es el experto en tecnología e investigación que tiene acceso a la información y los recursos necesarios para descubrir la verdad detrás de los asesinatos",
+          "abilities": [
+            {
+              "name": "Votar",
+              "description": "Al ser un colono, pueden votar en el día para ejecutar a un miembro de la colonia que sospechan que es un traidor"
+            },
+            {
+              "name": "Investigar",
+              "description": "En la noche, puede seleccionar a un colono para intentar averiguar si es un traidor o no"
+            }
+          ]
+        },
+        {
+          "name": "Saboteador",
+          "type": "killer",
+          "description": "Son miembros infiltrados enviados por una organización enemiga que buscan destruir la misión de la colonia y matar a tantos colonos como sea posible",
+          "abilities": [
+            {
+              "name": "Votar",
+              "description": "Al estar infiltrados en la colonia, pueden votar en el día para ejecutar a un miembro de la colonia"
+            },
+            {
+              "name": "Matar",
+              "description": "En la noche, discuten con los demás saboteadores para decidir a quien matar"
+            }
+          ]
+        }
+      ],
+      "stages": [
+        {
+          "name": "Sabotaje",
+          "type": "kill",
+          "description": "En la noche, los saboteadores discuten entre ellos para decidir a quien matar",
+          "resultPrompt": "You decided to try to kill:",
+          "roles": ["killer"],
+          "targets": ["innocent", "healer", "investigator"]
+        },
+        {
+          "name": "Curación",
+          "type": "heal",
+          "description": "En la noche, el médico selecciona a un colono para intentar curarlo (no sabe quien esta herido o no)",
+          "resultPrompt": "You decided to heal:",
+          "roles": ["healer"],
+          "targets": ["innocent", "healer", "investigator", "killer"]
+        },
+        {
+          "name": "Investigación",
+          "type": "investigate",
+          "description": "En la noche, el científico selecciona a un colono para intentar averiguar si es un traidor o no",
+          "resultPrompt": "You decided to investigate:",
+          "roles": ["investigator"],
+          "targets": ["innocent", "healer", "investigator", "killer"]
+        },
+        {
+          "name": "Ejecución",
+          "type": "vote",
+          "description": "En el día, todos los colonos votan para ejecutar a un miembro de la colonia que sospechan que es un traidor",
+          "resultPrompt": "You decided to execute:",
+          "roles": ["innocent", "healer", "investigator", "killer"],
+          "targets": ["innocent", "healer", "investigator", "killer"]
+        }
+      ]
+    },
+    {
+      "name": "Reyes y traidores",
+      "theme": "Medieval",
+      "description": "La corte del rey ha sido traicionada. Un grupo de nobles conspiradores ha decidido asesinar al monarca y tomar el poder para sí mismos. Pero entre los conspiradores hay un grupo de leales que no están dispuestos a permitirlo. El destino del reino está en sus manos",
+      "image": "https://cdn.discordapp.com/attachments/1089023783437877361/1089040138241327164/kira_kings_and_tyrants_middle_ages_095ed7a4-818b-413e-b075-739423a77a16.png",
+      "roles": [
+        {
+          "name": "Leal al rey",
+          "type": "innocent",
+          "description": "Un noble leal al rey que quiere protegerlo y descubrir a los traidores",
+          "abilities": [
+            {
+              "name": "Votar",
+              "description": "Pueden votar en el día para ejecutar a un miembro de la corte que sospechan que es un traidor"
+            }
+          ]
+        },
+        {
+          "name": "Hechicero",
+          "type": "healer",
+          "description": "Un sabio que conoce los secretos de las pociones curativas y que puede curar a cualquier persona, incluso al rey",
+          "abilities": [
+            {
+              "name": "Votar",
+              "description": "Al ser un leal al rey, pueden votar en el día para ejecutar a un miembro de la corte que sospechan que es un traidor"
+            },
+            {
+              "name": "Curar",
+              "description": "En la noche, puede seleccionar a un leal al rey para intentar curarlo (no sabe quien esta herido o no)"
+            }
+          ]
+        },
+        {
+          "name": "Inquisidor",
+          "type": "investigator",
+          "description": "Un experto en averiguar la verdad mediante la tortura y la investigación. Puede interrogar a una persona cada noche para averiguar si es un traidor o no",
+          "abilities": [
+            {
+              "name": "Votar",
+              "description": "Al ser un leal al rey, pueden votar en el día para ejecutar a un miembro de la corte que sospechan que es un traidor"
+            },
+            {
+              "name": "Investigar",
+              "description": "En la noche, puede seleccionar a un leal al rey para intentar averiguar si es un traidor o no"
+            }
+          ]
+        },
+        {
+          "name": "Asesino",
+          "type": "killer",
+          "description": "Un traidor que quiere asesinar al rey y a cualquiera que se interponga en su camino",
+          "abilities": [
+            {
+              "name": "Votar",
+              "description": "Al estar infiltrados en la corte, pueden votar en el día para ejecutar a un miembro de la corte"
+            },
+            {
+              "name": "Matar",
+              "description": "En la noche, discuten con los demás asesinos para decidir a quien matar"
+            }
+          ]
+        }
+      ],
+      "stages": [
+        {
+          "name": "Matanza",
+          "type": "kill",
+          "description": "En la noche, los asesinos discuten entre ellos para decidir a quien matar",
+          "resultPrompt": "You decided to try to kill:",
+          "roles": ["killer"],
+          "targets": ["innocent", "healer", "investigator"]
+        },
+        {
+          "name": "Curación",
+          "type": "heal",
+          "description": "En la noche, el hechicero selecciona a un leal al rey para intentar curarlo (no sabe quien esta herido o no)",
+          "resultPrompt": "You decided to heal:",
+          "roles": ["healer"],
+          "targets": ["innocent", "healer", "investigator", "killer"]
+        },
+        {
+          "name": "Investigación",
+          "type": "investigate",
+          "description": "En la noche, el inquisidor selecciona a un leal al rey para intentar averiguar si es un traidor o no",
+          "resultPrompt": "You decided to investigate:",
+          "roles": ["investigator"],
+          "targets": ["innocent", "healer", "investigator", "killer"]
+        },
+        {
+          "name": "Ejecución",
+          "type": "vote",
+          "description": "En el día, todos los leales al rey votan para ejecutar a un miembro de la corte que sospechan que es un traidor",
+          "resultPrompt": "You decided to execute:",
+          "roles": ["innocent", "healer", "investigator", "killer"],
+          "targets": ["innocent", "healer", "investigator", "killer"]
+        }
+      ]
+    }
+  ],
+  "rooms": []
+}

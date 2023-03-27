@@ -86,4 +86,39 @@ export interface MafiaDB {
   scenarios: Scenario[];
 }
 
-export const db = new JsonDB(new Config("db", true, true, "/"));
+export function getRoomDB(roomName: string) {
+  return new JsonDB(new Config(`db/rooms/${roomName}`, true, true, "/"));
+}
+
+export const generalDB = new JsonDB(new Config("db/db", true, true, "/"));
+
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+export async function getRooms() {
+  let roomNames: string[] = [];
+  try {
+    roomNames = fs.readdirSync(path.join(__dirname, "../db/rooms"));
+  } catch (e) {
+    console.log("Error while reading rooms", e);
+  }
+  return await Promise.all(
+    roomNames.map(async (roomName) => {
+      const room = await getRoomDB(
+        roomName.replace(".json", "")
+      ).getObject<Room>("/");
+      return room;
+    })
+  );
+}
+
+export async function deleteRoom(roomName: string) {
+  try {
+    fs.unlinkSync(path.join(__dirname, `../db/rooms/${roomName}.json`));
+  } catch (e) {
+    console.log("Error while deleting room", e);
+  }
+}

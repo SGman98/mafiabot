@@ -2,10 +2,12 @@ import {
   ChatInputCommandInteraction,
   Colors,
   EmbedBuilder,
+  GuildMember,
+  PermissionsBitField,
   SlashCommandBuilder,
   TextChannel,
 } from "discord.js";
-import { RoleType, Room, Stage, StageType, Status, db } from "../db.js";
+import { RoleType, Room, Stage, StageType, Status, getRoomDB } from "../db.js";
 
 import { getChannel } from "../utils.js";
 
@@ -21,10 +23,14 @@ export const data = new SlashCommandBuilder()
 
 export async function endStage(
   interaction: ChatInputCommandInteraction,
-  rooms: Room[],
   room: Room,
   stage: Stage
 ) {
+  const member = interaction.member as GuildMember;
+  if (!member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+    throw new Error("You don't have permission to start the room");
+  }
+
   const votes = stage.votes.reduce((acc, vote) => {
     if (!acc[vote.to]) acc[vote.to] = 0;
     acc[vote.to]++;
@@ -100,12 +106,12 @@ export async function endStage(
 
   const channel = await getChannel({ interaction, roles: stage.roles });
 
-  await db.push(
-    `/rooms[${rooms.indexOf(room)}]/stages[${room.stages.length - 1}]/status`,
+  await getRoomDB(room.name).push(
+    `/stages[${room.stages.length - 1}]/status`,
     Status.Finished
   );
-  await db.push(
-    `/rooms[${rooms.indexOf(room)}]/stages[${room.stages.length - 1}]/result`,
+  await getRoomDB(room.name).push(
+    `/stages[${room.stages.length - 1}]/result`,
     maxVotedUser
   );
 
@@ -116,7 +122,6 @@ export async function endStage(
 
 export async function nextStage(
   interaction: ChatInputCommandInteraction,
-  rooms: Room[],
   room: Room,
   currentStage: Stage | undefined
 ) {
@@ -201,7 +206,7 @@ export async function nextStage(
   const channel = await getChannel({ interaction });
   if (!channel) throw new Error("Could not find the channel");
 
-  await db.push(`/rooms[${rooms.indexOf(room)}]/stages[]`, newStage);
+  await getRoomDB(room.name).push(`/stages[]`, newStage);
 
   await channel.send({ embeds });
   await interaction.editReply({ content: "Stage started" });
@@ -216,21 +221,19 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   const roomName = channel.parent?.name.replace("room-", "");
   if (!roomName) throw new Error("You are not in a room");
 
-  const rooms = await db.getObject<Room[]>("/rooms");
-  const room = rooms.find((room) => room.name === roomName);
-  if (!room) throw new Error(`Could not find the room ${roomName}`);
+  const room = await getRoomDB(roomName).getObject<Room>("/");
 
   const currentStage = room.stages[room.stages.length - 1];
 
   const subcommand = interaction.options.getSubcommand();
 
   if (currentStage?.status === Status.Playing) {
-    await endStage(interaction, rooms, room, currentStage);
+    await endStage(interaction, room, currentStage);
   }
 
   if (subcommand === "next") {
     if (room.status === Status.Playing)
-      await nextStage(interaction, rooms, room, currentStage);
+      await nextStage(interaction, room, currentStage);
     else
       await interaction.editReply({
         content:
