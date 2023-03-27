@@ -8,7 +8,7 @@
     "dev": "tsc-watch --onSuccess \"node ./build/index.js\"",
     "build": "tsc",
     "start": "node ./build/index.js",
-    "register": "node ./build/deploy-commands.js",
+    "register": "node ./build/register-commands.js",
     "format": "prettier --write '**/*.{js,ts,json}'"
   },
   "keywords": [],
