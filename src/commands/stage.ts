@@ -2,6 +2,8 @@ import {
   ChatInputCommandInteraction,
   Colors,
   EmbedBuilder,
+  Emoji,
+  EmojiIdentifierResolvable,
   PermissionFlagsBits,
   SlashCommandBuilder,
   TextChannel,
@@ -204,6 +206,87 @@ export async function nextStage(
   await getRoomDB(room.name).push(`/stages[]`, newStage);
 
   await channel.send({ embeds });
+
+  const roleChannel = await getChannel({ interaction, roles: newStage.roles });
+  if (!roleChannel) throw new Error("Could not find the role channel");
+
+  const regionalLettersEmojis = Array.from({ length: 26 }, (_, i) =>
+    String.fromCodePoint(0x1f1e6 + i)
+  ) as EmojiIdentifierResolvable[];
+
+  const voteEmbed = new EmbedBuilder()
+    .setTitle(`Vote for who you want to ${newStage.resultPrompt}`)
+    .setDescription(
+      room.players
+        .map((player, index) => {
+          return `${regionalLettersEmojis[index]} <@${player.id}>`;
+        })
+        .join("\n")
+    )
+    .setColor(Colors.Green);
+
+  const message = await roleChannel.send({ embeds: [voteEmbed] });
+
+  await Promise.allSettled(
+    room.players.map((_, index) => {
+      const emoji = regionalLettersEmojis[index];
+      if (!emoji) throw new Error("Could not find the emoji");
+      return message.react(emoji);
+    })
+  );
+
+  const collector = message.createReactionCollector({
+    filter: () => true,
+    time: 1000 * 10,
+    dispose: true,
+  });
+
+  let results: { [key: string]: number } = {};
+
+  collector.on("collect", (reaction, user) => {
+    const player = room.players.find((player) => player.id === user.id);
+    if (!player) return console.error("Could not find the player");
+
+    const emojiIndex = regionalLettersEmojis.findIndex(
+      (emoji) => emoji === reaction.emoji.name
+    );
+    if (emojiIndex === -1) return console.error("Could not find the emoji");
+
+    const votedPlayer = room.players[emojiIndex];
+    if (!votedPlayer) return console.error("Could not find the voted player");
+
+    console.log(`The player ${player.id} voted for ${votedPlayer.id}`);
+
+    results[votedPlayer.id] ??= 0;
+    results[votedPlayer.id]++;
+  });
+
+  collector.on("remove", (reaction, user) => {
+    const player = room.players.find((player) => player.id === user.id);
+    if (!player) return console.error("Could not find the player");
+
+    const emojiIndex = regionalLettersEmojis.findIndex(
+      (emoji) => emoji === reaction.emoji.name
+    );
+    if (emojiIndex === -1) return console.error("Could not find the emoji");
+
+    const votedPlayer = room.players[emojiIndex];
+    if (!votedPlayer) return console.error("Could not find the voted player");
+
+    console.log(
+      `The player ${player.id} removed his vote for ${votedPlayer.id}`
+    );
+
+    results[votedPlayer.id] ??= 1;
+    results[votedPlayer.id]--;
+  });
+
+  collector.on("end", async () => {
+    console.log("end");
+
+    console.log("results", JSON.stringify(results));
+  });
+
   await interaction.editReply({ content: "Stage started" });
 }
 
