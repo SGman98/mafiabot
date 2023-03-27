@@ -25,14 +25,8 @@ export interface Ability {
   description: string;
 }
 
-export interface Vote {
-  from: string;
-  to: string;
-}
-
 export interface Stage {
   type: StageType;
-  votes: Vote[];
   status: Status;
   result: string | undefined;
   day: number;
@@ -99,20 +93,20 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export async function getRooms() {
-  let roomNames: string[] = [];
   try {
-    roomNames = fs.readdirSync(path.join(__dirname, "../db/rooms"));
+    const roomNames = fs.readdirSync(path.join(__dirname, "../db/rooms"));
+    return await Promise.all(
+      roomNames.map(async (roomName) => {
+        const room = await getRoomDB(
+          roomName.replace(".json", "")
+        ).getObject<Room>("/");
+        return room;
+      })
+    );
   } catch (e) {
     console.log("Error while reading rooms", e);
+    return [];
   }
-  return await Promise.all(
-    roomNames.map(async (roomName) => {
-      const room = await getRoomDB(
-        roomName.replace(".json", "")
-      ).getObject<Room>("/");
-      return room;
-    })
-  );
 }
 
 export async function deleteRoom(roomName: string) {
