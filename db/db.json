@@ -71,7 +71,7 @@
           "resultPrompt": "You decided to try to kill:",
           "roles": ["killer"],
           "targets": ["innocent", "healer", "investigator"],
-          "duration": "30s"
+          "duration": "10s"
         },
         {
           "name": "Curación",
@@ -80,7 +80,7 @@
           "resultPrompt": "You decided to heal:",
           "roles": ["healer"],
           "targets": ["innocent", "healer", "investigator", "killer"],
-          "duration": "30s"
+          "duration": "10s"
         },
         {
           "name": "Investigación",
@@ -89,7 +89,7 @@
           "resultPrompt": "You decided to investigate:",
           "roles": ["investigator"],
           "targets": ["innocent", "healer", "investigator", "killer"],
-          "duration": "30s"
+          "duration": "10s"
         },
         {
           "name": "Ejecución",
@@ -173,7 +173,7 @@
           "resultPrompt": "You decided to try to kill:",
           "roles": ["killer"],
           "targets": ["innocent", "healer", "investigator"],
-          "duration": "30s"
+          "duration": "10s"
         },
         {
           "name": "Curación",
@@ -182,7 +182,7 @@
           "resultPrompt": "You decided to heal:",
           "roles": ["healer"],
           "targets": ["innocent", "healer", "investigator", "killer"],
-          "duration": "30s"
+          "duration": "10s"
         },
         {
           "name": "Investigación",
@@ -191,7 +191,7 @@
           "resultPrompt": "You decided to investigate:",
           "roles": ["investigator"],
           "targets": ["innocent", "healer", "investigator", "killer"],
-          "duration": "30s"
+          "duration": "10s"
         },
         {
           "name": "Ejecución",

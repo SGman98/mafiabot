@@ -73,12 +73,6 @@ function collectorOnEnd({
             .join("\n") || "Nobody voted",
       },
       {
-        name: "Total votes",
-        value: Object.values(results)
-          .reduce((a, b) => a + b, 0)
-          .toString(),
-      },
-      {
         name: stage.resultPrompt,
         value: result ? `<@${result}>` : "Nobody",
       },
@@ -288,7 +282,6 @@ export async function nextStage(
 
   const collector = message.createReactionCollector({
     filter: (_, user) => user.id !== message.author.id,
-    // time: stageScenario.duration * 1000 * 60,
     dispose: true,
   });
 
