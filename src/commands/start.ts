@@ -90,6 +90,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       investigator: Colors.Blue,
       killer: Colors.Red,
       innocent: Colors.Grey,
+      dead: Colors.Purple,
     };
 
     const roleColor = embedColor[role.type] ?? Colors.Default;

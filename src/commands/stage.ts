@@ -11,7 +11,15 @@ import {
 } from "discord.js";
 import ms from "ms";
 
-import { RoleType, Room, Stage, StageType, Status, getRoomDB } from "../db.js";
+import {
+  Player,
+  RoleType,
+  Room,
+  Stage,
+  StageType,
+  Status,
+  getRoomDB,
+} from "../db.js";
 
 import { getChannel } from "../utils.js";
 
@@ -42,7 +50,6 @@ function collectorOnEnd({
   newStage: Stage;
 }) {
   collector.on("end", async () => {
-    console.log("Collector ended");
     const maxVotes = Math.max(0, ...Object.values(results));
 
     const playersWithMaxVotes = Object.entries(results)
@@ -51,7 +58,7 @@ function collectorOnEnd({
 
     const result =
       playersWithMaxVotes[
-        Math.floor(Math.random() * playersWithMaxVotes.length)
+      Math.floor(Math.random() * playersWithMaxVotes.length)
       ];
 
     room = await getRoomDB(room.name).getObject<Room>("/");
@@ -60,7 +67,7 @@ function collectorOnEnd({
       `/stages/${room.stages.length - 1}/result`,
       result
     );
-    console.info(`Stage ${stage.name} ended with result ${result}`);
+    console.log(`Stage ${stage.name} ended with result ${result}`);
 
     const embedFields = [
       {
@@ -115,11 +122,11 @@ function collectorOnEnd({
 
 function collectorOnRemove({
   collector,
-  room,
+  alivePlayers,
   results,
 }: {
   collector: ReactionCollector;
-  room: Room;
+  alivePlayers: Player[];
   results: Record<string, number>;
 }) {
   collector.on("remove", async (reaction, user) => {
@@ -128,7 +135,7 @@ function collectorOnRemove({
     );
     if (emojiIndex === -1) return console.error("Could not find the emoji");
 
-    const votedPlayer = room.players[emojiIndex];
+    const votedPlayer = alivePlayers[emojiIndex];
     if (!votedPlayer) return console.error("Could not find the voted player");
 
     console.log(`The player ${user.id} removed his vote for ${votedPlayer.id}`);
@@ -140,11 +147,11 @@ function collectorOnRemove({
 
 function collectorOnCollect({
   collector,
-  room,
+  alivePlayers,
   results,
 }: {
   collector: ReactionCollector;
-  room: Room;
+  alivePlayers: Player[];
   results: Record<string, number>;
 }) {
   collector.on("collect", (reaction, user) => {
@@ -153,7 +160,7 @@ function collectorOnCollect({
     );
     if (emojiIndex === -1) return console.error("Could not find the emoji");
 
-    const votedPlayer = room.players[emojiIndex];
+    const votedPlayer = alivePlayers[emojiIndex];
     if (!votedPlayer) return console.error("Could not find the voted player");
 
     console.log(`The player ${user.id} voted for ${votedPlayer.id}`);
@@ -173,7 +180,7 @@ export async function nextStage(
 
   const nextStageType = stagesOrder[
     (stagesOrder.indexOf(currentStage?.type || StageType.Vote) + 1) %
-      stagesOrder.length
+    stagesOrder.length
   ] as StageType;
 
   const stageScenario = room.scenario.stages.find(
@@ -203,16 +210,39 @@ export async function nextStage(
         .setColor(Colors.Yellow)
         .setDescription(
           "The night has passed\n" +
-            (playerKilled
-              ? `Someone tried to kill <@${playerKilled}>` +
-                (playerHealed === playerKilled
-                  ? " but he was saved by the healer"
-                  : " and no one saved him")
-              : "And everyone was safe")
+          (playerKilled
+            ? `Someone tried to kill <@${playerKilled}>` +
+            (playerHealed === playerKilled
+              ? " but he was saved by the healer"
+              : " and no one saved him")
+            : "And everyone was safe")
         )
     );
-  }
 
+    if (playerKilled && playerHealed !== playerKilled) {
+      const player = room.players.find((player) => player.id === playerKilled);
+      if (!player) throw new Error("Could not find the player");
+
+      const guildMember = interaction.guild?.members.cache.get(player.id);
+      if (!guildMember) throw new Error("Could not find the guild member");
+
+      const channel = await getChannel({
+        interaction,
+        roles: [player.role!],
+        roomName: room.name,
+      });
+
+      await channel.permissionOverwrites.delete(guildMember, "Dead player");
+
+      const playerIdx = room.players.findIndex(
+        (player) => player.id === playerKilled
+      );
+      await getRoomDB(room.name).push(
+        `/players[${playerIdx}]/role`,
+        RoleType.Dead
+      );
+    }
+  }
   const newStage: Stage = {
     name: `${stageScenario.name} - Day ${nextDay}`,
     day: nextDay,
@@ -254,6 +284,11 @@ export async function nextStage(
   const roleChannel = await getChannel({ interaction, roles: newStage.roles });
   if (!roleChannel) throw new Error("Could not find the role channel");
 
+  const players = await getRoomDB(room.name).getObject<Player[]>("/players");
+  if (!players) throw new Error("Could not find the players");
+
+  const alivePlayers = players.filter((player) => player.role !== RoleType.Dead);
+
   const voteEmbed = new EmbedBuilder()
     .setTitle(
       `Votation started: ${newStage.name} - Duration: ${ms(
@@ -262,7 +297,7 @@ export async function nextStage(
       )}`
     )
     .setDescription(
-      room.players
+      alivePlayers
         .map((player, index) => {
           return `${regionalLettersEmojis[index]} <@${player.id}>`;
         })
@@ -273,7 +308,7 @@ export async function nextStage(
   const message = await roleChannel.send({ embeds: [voteEmbed] });
 
   await Promise.allSettled(
-    room.players.map((_, index) => {
+    alivePlayers.map((_, index) => {
       const emoji = regionalLettersEmojis[index];
       if (!emoji) throw new Error("Could not find the emoji");
       return message.react(emoji);
@@ -281,14 +316,20 @@ export async function nextStage(
   );
 
   const collector = message.createReactionCollector({
-    filter: (_, user) => user.id !== message.author.id,
+    filter: (_, user) => {
+      const isBot = user.id === message.author.id;
+      const player = room.players.find((player) => player.id === user.id);
+      const isDead = player?.role === RoleType.Dead;
+      return !isBot && !isDead;
+    },
+
     dispose: true,
   });
 
   let results: Record<string, number> = {};
 
-  collectorOnCollect({ collector, results, room });
-  collectorOnRemove({ collector, results, room });
+  collectorOnCollect({ collector, results, alivePlayers });
+  collectorOnRemove({ collector, results, alivePlayers });
   collectorOnEnd({ collector, room, voteEmbed, results, message, newStage });
 
   await interaction.editReply({ content: "Stage started" });

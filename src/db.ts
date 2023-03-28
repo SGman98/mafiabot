@@ -5,6 +5,7 @@ export enum RoleType {
   Innocent = "innocent",
   Healer = "healer",
   Investigator = "investigator",
+  Dead = "dead",
 }
 
 export enum StageType {
@@ -57,6 +58,7 @@ export interface Role {
 export interface Player {
   id: string;
   role: RoleType | undefined;
+  will: string | undefined;
 }
 
 export interface Scenario {
@@ -95,7 +97,10 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export async function getRooms() {
   try {
-    const roomNames = fs.readdirSync(path.join(__dirname, "../db/rooms"));
+    const roomNames = fs.readdirSync(path.join(__dirname, "../db/rooms")).filter(
+      (file) => file.endsWith(".json")
+    );
+
     return await Promise.all(
       roomNames.map(async (roomName) => {
         const room = await getRoomDB(
