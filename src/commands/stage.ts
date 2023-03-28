@@ -100,7 +100,7 @@ function collectorOnEnd({
 
     const result =
       playersWithMaxVotes[
-      Math.floor(Math.random() * playersWithMaxVotes.length)
+        Math.floor(Math.random() * playersWithMaxVotes.length)
       ];
 
     room = await getRoomDB(room.name).getObject<Room>("/");
@@ -152,7 +152,6 @@ function collectorOnEnd({
     }
 
     if (stage.type === StageType.Vote && result) {
-      // pass
       await killPlayer({ interaction, playerKilled: result, room });
     }
 
@@ -227,7 +226,7 @@ export async function nextStage(
 
   const nextStageType = stagesOrder[
     (stagesOrder.indexOf(currentStage?.type || StageType.Vote) + 1) %
-    stagesOrder.length
+      stagesOrder.length
   ] as StageType;
 
   const stageScenario = room.scenario.stages.find(
@@ -239,36 +238,32 @@ export async function nextStage(
   if (nextStageType === "vote") nextDay++;
 
   const embeds = [];
+  const previousDayStages = room.stages.filter(
+    (stage) => stage.day === nextDay - 1
+  );
+
+  const playerKilled = previousDayStages.find(
+    (stage) => stage.type === StageType.Kill
+  )?.result;
+  const playerHealed = previousDayStages.find(
+    (stage) => stage.type === StageType.Heal
+  )?.result;
+
   if (nextDay !== currentStage?.day && nextDay !== 1) {
-    const previousDayStages = room.stages.filter(
-      (stage) => stage.day === nextDay - 1
-    );
-
-    const playerKilled = previousDayStages.find(
-      (stage) => stage.type === StageType.Kill
-    )?.result;
-    const playerHealed = previousDayStages.find(
-      (stage) => stage.type === StageType.Heal
-    )?.result;
-
     embeds.push(
       new EmbedBuilder()
         .setTitle(`Day ${nextDay - 1} report`)
         .setColor(Colors.Yellow)
         .setDescription(
           "The night has passed\n" +
-          (playerKilled
-            ? `Someone tried to kill <@${playerKilled}>` +
-            (playerHealed === playerKilled
-              ? " but he was saved by the healer"
-              : " and no one saved him")
-            : "And everyone was safe")
+            (playerKilled
+              ? `Someone tried to kill <@${playerKilled}>` +
+                (playerHealed === playerKilled
+                  ? " but he was saved by the healer"
+                  : " and no one saved him")
+              : "And everyone was safe")
         )
     );
-
-    if (playerKilled && playerHealed !== playerKilled) {
-      await killPlayer({ interaction, room, playerKilled });
-    }
   }
   const newStage: Stage = {
     name: `${stageScenario.name} - Day ${nextDay}`,
@@ -304,9 +299,13 @@ export async function nextStage(
   const channel = await getChannel({ interaction });
   if (!channel) throw new Error("Could not find the channel");
 
-  await getRoomDB(room.name).push(`/stages[]`, newStage);
-
   await channel.send({ embeds });
+
+  if (playerKilled && playerHealed !== playerKilled) {
+    await killPlayer({ interaction, room, playerKilled });
+  }
+
+  await getRoomDB(room.name).push(`/stages[]`, newStage);
 
   const roleChannel = await getChannel({ interaction, roles: newStage.roles });
   if (!roleChannel) throw new Error("Could not find the role channel");
