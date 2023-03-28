@@ -22,16 +22,20 @@ export const execute = async (interaction: Interaction) => {
     console.log(
       `Error executing command /${interaction.commandName}: ${error.message}`
     );
-    if (interaction.replied || interaction.deferred) {
-      await interaction.followUp({
-        content: `Error: ${error.message}`,
-        ephemeral: true,
-      });
-    } else {
-      await interaction.reply({
-        content: `Error: ${error.message}`,
-        ephemeral: true,
-      });
+    try {
+      if (interaction.replied || interaction.deferred) {
+        await interaction.followUp({
+          content: `Error: ${error.message}`,
+          ephemeral: true,
+        });
+      } else {
+        await interaction.reply({
+          content: `Error: ${error.message}`,
+          ephemeral: true,
+        });
+      }
+    } catch (error) {
+      console.log(`Error sending error message: ${error.message}`);
     }
   }
 };

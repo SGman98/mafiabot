@@ -70,7 +70,8 @@
           "description": "En la noche, los saboteadores discuten entre ellos para decidir a quien matar",
           "resultPrompt": "You decided to try to kill:",
           "roles": ["killer"],
-          "targets": ["innocent", "healer", "investigator"]
+          "targets": ["innocent", "healer", "investigator"],
+          "duration": "30s"
         },
         {
           "name": "Curación",
@@ -78,7 +79,8 @@
           "description": "En la noche, el médico selecciona a un colono para intentar curarlo (no sabe quien esta herido o no)",
           "resultPrompt": "You decided to heal:",
           "roles": ["healer"],
-          "targets": ["innocent", "healer", "investigator", "killer"]
+          "targets": ["innocent", "healer", "investigator", "killer"],
+          "duration": "30s"
         },
         {
           "name": "Investigación",
@@ -86,7 +88,8 @@
           "description": "En la noche, el científico selecciona a un colono para intentar averiguar si es un traidor o no",
           "resultPrompt": "You decided to investigate:",
           "roles": ["investigator"],
-          "targets": ["innocent", "healer", "investigator", "killer"]
+          "targets": ["innocent", "healer", "investigator", "killer"],
+          "duration": "30s"
         },
         {
           "name": "Ejecución",
@@ -94,7 +97,8 @@
           "description": "En el día, todos los colonos votan para ejecutar a un miembro de la colonia que sospechan que es un traidor",
           "resultPrompt": "You decided to execute:",
           "roles": ["innocent", "healer", "investigator", "killer"],
-          "targets": ["innocent", "healer", "investigator", "killer"]
+          "targets": ["innocent", "healer", "investigator", "killer"],
+          "duration": "30s"
         }
       ]
     },
@@ -168,7 +172,8 @@
           "description": "En la noche, los asesinos discuten entre ellos para decidir a quien matar",
           "resultPrompt": "You decided to try to kill:",
           "roles": ["killer"],
-          "targets": ["innocent", "healer", "investigator"]
+          "targets": ["innocent", "healer", "investigator"],
+          "duration": "30s"
         },
         {
           "name": "Curación",
@@ -176,7 +181,8 @@
           "description": "En la noche, el hechicero selecciona a un leal al rey para intentar curarlo (no sabe quien esta herido o no)",
           "resultPrompt": "You decided to heal:",
           "roles": ["healer"],
-          "targets": ["innocent", "healer", "investigator", "killer"]
+          "targets": ["innocent", "healer", "investigator", "killer"],
+          "duration": "30s"
         },
         {
           "name": "Investigación",
@@ -184,7 +190,8 @@
           "description": "En la noche, el inquisidor selecciona a un leal al rey para intentar averiguar si es un traidor o no",
           "resultPrompt": "You decided to investigate:",
           "roles": ["investigator"],
-          "targets": ["innocent", "healer", "investigator", "killer"]
+          "targets": ["innocent", "healer", "investigator", "killer"],
+          "duration": "30s"
         },
         {
           "name": "Ejecución",
@@ -192,7 +199,8 @@
           "description": "En el día, todos los leales al rey votan para ejecutar a un miembro de la corte que sospechan que es un traidor",
           "resultPrompt": "You decided to execute:",
           "roles": ["innocent", "healer", "investigator", "killer"],
-          "targets": ["innocent", "healer", "investigator", "killer"]
+          "targets": ["innocent", "healer", "investigator", "killer"],
+          "duration": "30s"
         }
       ]
     }

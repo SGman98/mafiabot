@@ -9,6 +9,8 @@ import {
   SlashCommandBuilder,
   TextChannel,
 } from "discord.js";
+import ms from "ms";
+
 import { RoleType, Room, Stage, StageType, Status, getRoomDB } from "../db.js";
 
 import { getChannel } from "../utils.js";
@@ -40,6 +42,7 @@ function collectorOnEnd({
   newStage: Stage;
 }) {
   collector.on("end", async () => {
+    console.log("Collector ended");
     const maxVotes = Math.max(0, ...Object.values(results));
 
     const playersWithMaxVotes = Object.entries(results)
@@ -48,13 +51,16 @@ function collectorOnEnd({
 
     const result =
       playersWithMaxVotes[
-        Math.floor(Math.random() * playersWithMaxVotes.length)
+      Math.floor(Math.random() * playersWithMaxVotes.length)
       ];
+
+    room = await getRoomDB(room.name).getObject<Room>("/");
 
     await getRoomDB(room.name).push(
       `/stages/${room.stages.length - 1}/result`,
-      result || "nobody"
+      result
     );
+    console.info(`Stage ${stage.name} ended with result ${result}`);
 
     const embedFields = [
       {
@@ -73,7 +79,7 @@ function collectorOnEnd({
           .toString(),
       },
       {
-        name: `-- ${stage.resultPrompt} --`,
+        name: stage.resultPrompt,
         value: result ? `<@${result}>` : "Nobody",
       },
     ];
@@ -173,7 +179,7 @@ export async function nextStage(
 
   const nextStageType = stagesOrder[
     (stagesOrder.indexOf(currentStage?.type || StageType.Vote) + 1) %
-      stagesOrder.length
+    stagesOrder.length
   ] as StageType;
 
   const stageScenario = room.scenario.stages.find(
@@ -203,12 +209,12 @@ export async function nextStage(
         .setColor(Colors.Yellow)
         .setDescription(
           "The night has passed\n" +
-            (playerKilled
-              ? `Someone tried to kill <@${playerKilled}>` +
-                (playerHealed === playerKilled
-                  ? " but he was saved by the healer"
-                  : " and no one saved him")
-              : "And everyone was safe")
+          (playerKilled
+            ? `Someone tried to kill <@${playerKilled}>` +
+            (playerHealed === playerKilled
+              ? " but he was saved by the healer"
+              : " and no one saved him")
+            : "And everyone was safe")
         )
     );
   }
@@ -255,7 +261,12 @@ export async function nextStage(
   if (!roleChannel) throw new Error("Could not find the role channel");
 
   const voteEmbed = new EmbedBuilder()
-    .setTitle(`Vote for who you want to ${newStage.resultPrompt}`)
+    .setTitle(
+      `Votation started: ${newStage.name} - Duration: ${ms(
+        ms(stageScenario.duration),
+        { long: true }
+      )}`
+    )
     .setDescription(
       room.players
         .map((player, index) => {
@@ -277,7 +288,7 @@ export async function nextStage(
 
   const collector = message.createReactionCollector({
     filter: (_, user) => user.id !== message.author.id,
-    time: 1000 * 10,
+    // time: stageScenario.duration * 1000 * 60,
     dispose: true,
   });
 
@@ -288,6 +299,26 @@ export async function nextStage(
   collectorOnEnd({ collector, room, voteEmbed, results, message, newStage });
 
   await interaction.editReply({ content: "Stage started" });
+
+  let timeLeft = ms(stageScenario.duration);
+  const timer = setInterval(async () => {
+    timeLeft -= 10000;
+
+    if (timeLeft <= 0) {
+      clearInterval(timer);
+      collector.stop();
+      await message.reactions.removeAll();
+      return;
+    }
+
+    voteEmbed.setTitle(
+      `Votation started: ${newStage.name} - Duration: ${ms(timeLeft, {
+        long: true,
+      })}`
+    );
+
+    await message.edit({ embeds: [voteEmbed] });
+  }, 10000);
 }
 
 export async function execute(interaction: ChatInputCommandInteraction) {

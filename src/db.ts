@@ -44,6 +44,7 @@ export interface StageScenario {
   roles: RoleType[];
   targets: RoleType[];
   resultPrompt: string;
+  duration: string;
 }
 
 export interface Role {
