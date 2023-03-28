@@ -65,7 +65,9 @@ async function killPlayer({
     .setTitle("Player died")
     .setColor(Colors.Red)
     .setDescription(
-      `The player ${guildMember} has died. They were a ${player.role}`
+      `The player ${guildMember} has died, whose role was: **${
+        room.scenario.roles.find((role) => role.type === player.role)?.name
+      }**`
     );
 
   await generalChannel.send({ embeds: [deadPlayerEmbed] });
@@ -222,8 +224,6 @@ export async function nextStage(
 ) {
   const stagesOrder = Object.values(StageType);
 
-  console.log("stages order", stagesOrder);
-
   const nextStageType = stagesOrder[
     (stagesOrder.indexOf(currentStage?.type || StageType.Vote) + 1) %
       stagesOrder.length
@@ -265,6 +265,9 @@ export async function nextStage(
         )
     );
   }
+
+  // TODO: add game over logic
+
   const newStage: Stage = {
     name: `${stageScenario.name} - Day ${nextDay}`,
     day: nextDay,
@@ -300,6 +303,7 @@ export async function nextStage(
   if (!channel) throw new Error("Could not find the channel");
 
   await channel.send({ embeds });
+  console.log(`Stage started: ${newStage.name}`);
 
   if (playerKilled && playerHealed !== playerKilled) {
     await killPlayer({ interaction, room, playerKilled });
@@ -346,9 +350,8 @@ export async function nextStage(
   const collector = message.createReactionCollector({
     filter: (_, user) => {
       const isBot = user.id === message.author.id;
-      const player = room.players.find((player) => player.id === user.id);
-      const isDead = player?.role === RoleType.Dead;
-      return !isBot && !isDead;
+      const isAlive = alivePlayers.some((player) => player.id === user.id);
+      return !isBot && isAlive;
     },
 
     dispose: true,
@@ -370,9 +373,13 @@ export async function nextStage(
 
   await interaction.editReply({ content: "Stage started" });
 
+  let pace = 10000;
+  let changePace = pace;
   let timeLeft = ms(stageScenario.duration);
-  const timer = setInterval(async () => {
-    timeLeft -= 10000;
+  let timer = setInterval(timerFunction, pace);
+
+  async function timerFunction() {
+    timeLeft -= pace;
 
     if (timeLeft <= 0) {
       clearInterval(timer);
@@ -381,14 +388,20 @@ export async function nextStage(
       return;
     }
 
+    if (timeLeft <= changePace) {
+      clearInterval(timer);
+      pace = 1000;
+      timer = setInterval(timerFunction, pace);
+    }
+
     voteEmbed.setTitle(
-      `Votation started: ${newStage.name} - Duration: ${ms(timeLeft, {
+      `Votation started: ${newStage.name} - Time left: ${ms(timeLeft, {
         long: true,
       })}`
     );
 
     await message.edit({ embeds: [voteEmbed] });
-  }, 10000);
+  }
 }
 
 export async function execute(interaction: ChatInputCommandInteraction) {

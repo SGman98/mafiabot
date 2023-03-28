@@ -91,8 +91,15 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   const embed = new EmbedBuilder()
     .setTitle(`Room: ${roomName}`)
-    .setDescription(`Scenario: **${scenarioName}**\n\n${scenario.description}`)
     .addFields(
+      {
+        name: "Scenario",
+        value: scenario.name,
+      },
+      {
+        name: "Description",
+        value: scenario.description,
+      },
       {
         name: "Theme",
         value: scenario.theme,
