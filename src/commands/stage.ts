@@ -35,13 +35,55 @@ export const data = new SlashCommandBuilder()
   )
   .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
 
+async function killPlayer({
+  interaction,
+  playerKilled,
+  room,
+}: {
+  interaction: ChatInputCommandInteraction;
+  playerKilled: string;
+  room: Room;
+}) {
+  const player = room.players.find((player) => player.id === playerKilled);
+  if (!player) throw new Error("Could not find the player");
+
+  const guildMember = interaction.guild?.members.cache.get(player.id);
+  if (!guildMember) throw new Error("Could not find the guild member");
+
+  if (player.role === RoleType.Innocent) {
+    const roleChannel = await getChannel({
+      interaction,
+      roles: [player.role!],
+      roomName: room.name,
+    });
+    await roleChannel.permissionOverwrites.delete(guildMember, "Dead player");
+  }
+
+  const generalChannel = await getChannel({ interaction, roomName: room.name });
+
+  const deadPlayerEmbed = new EmbedBuilder()
+    .setTitle("Player died")
+    .setColor(Colors.Red)
+    .setDescription(
+      `The player ${guildMember} has died. They were a ${player.role}`
+    );
+
+  await generalChannel.send({ embeds: [deadPlayerEmbed] });
+
+  const playerIdx = room.players.findIndex(
+    (player) => player.id === playerKilled
+  );
+  await getRoomDB(room.name).push(`/players[${playerIdx}]/role`, RoleType.Dead);
+}
 function collectorOnEnd({
+  interaction,
   collector,
   results,
   room,
   message,
   newStage: stage,
 }: {
+  interaction: ChatInputCommandInteraction;
   collector: ReactionCollector;
   results: Record<string, number>;
   voteEmbed: EmbedBuilder;
@@ -107,6 +149,11 @@ function collectorOnEnd({
           ? `<@${result}> is a killer`
           : `<@${result}> is not a killer`,
       });
+    }
+
+    if (stage.type === StageType.Vote && result) {
+      // pass
+      await killPlayer({ interaction, playerKilled: result, room });
     }
 
     const embed = new EmbedBuilder()
@@ -220,27 +267,7 @@ export async function nextStage(
     );
 
     if (playerKilled && playerHealed !== playerKilled) {
-      const player = room.players.find((player) => player.id === playerKilled);
-      if (!player) throw new Error("Could not find the player");
-
-      const guildMember = interaction.guild?.members.cache.get(player.id);
-      if (!guildMember) throw new Error("Could not find the guild member");
-
-      const channel = await getChannel({
-        interaction,
-        roles: [player.role!],
-        roomName: room.name,
-      });
-
-      await channel.permissionOverwrites.delete(guildMember, "Dead player");
-
-      const playerIdx = room.players.findIndex(
-        (player) => player.id === playerKilled
-      );
-      await getRoomDB(room.name).push(
-        `/players[${playerIdx}]/role`,
-        RoleType.Dead
-      );
+      await killPlayer({ interaction, room, playerKilled });
     }
   }
   const newStage: Stage = {
@@ -287,7 +314,9 @@ export async function nextStage(
   const players = await getRoomDB(room.name).getObject<Player[]>("/players");
   if (!players) throw new Error("Could not find the players");
 
-  const alivePlayers = players.filter((player) => player.role !== RoleType.Dead);
+  const alivePlayers = players.filter(
+    (player) => player.role !== RoleType.Dead
+  );
 
   const voteEmbed = new EmbedBuilder()
     .setTitle(
@@ -330,7 +359,15 @@ export async function nextStage(
 
   collectorOnCollect({ collector, results, alivePlayers });
   collectorOnRemove({ collector, results, alivePlayers });
-  collectorOnEnd({ collector, room, voteEmbed, results, message, newStage });
+  collectorOnEnd({
+    interaction,
+    collector,
+    room,
+    voteEmbed,
+    results,
+    message,
+    newStage,
+  });
 
   await interaction.editReply({ content: "Stage started" });
 
