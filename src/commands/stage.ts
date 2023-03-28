@@ -51,7 +51,7 @@ function collectorOnEnd({
 
     const result =
       playersWithMaxVotes[
-      Math.floor(Math.random() * playersWithMaxVotes.length)
+        Math.floor(Math.random() * playersWithMaxVotes.length)
       ];
 
     room = await getRoomDB(room.name).getObject<Room>("/");
@@ -179,7 +179,7 @@ export async function nextStage(
 
   const nextStageType = stagesOrder[
     (stagesOrder.indexOf(currentStage?.type || StageType.Vote) + 1) %
-    stagesOrder.length
+      stagesOrder.length
   ] as StageType;
 
   const stageScenario = room.scenario.stages.find(
@@ -209,12 +209,12 @@ export async function nextStage(
         .setColor(Colors.Yellow)
         .setDescription(
           "The night has passed\n" +
-          (playerKilled
-            ? `Someone tried to kill <@${playerKilled}>` +
-            (playerHealed === playerKilled
-              ? " but he was saved by the healer"
-              : " and no one saved him")
-            : "And everyone was safe")
+            (playerKilled
+              ? `Someone tried to kill <@${playerKilled}>` +
+                (playerHealed === playerKilled
+                  ? " but he was saved by the healer"
+                  : " and no one saved him")
+              : "And everyone was safe")
         )
     );
   }
