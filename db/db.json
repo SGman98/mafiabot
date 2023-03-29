@@ -71,7 +71,7 @@
           "resultPrompt": "You decided to try to kill:",
           "roles": ["killer"],
           "targets": ["innocent", "healer", "investigator"],
-          "duration": "10s"
+          "duration": "60s"
         },
         {
           "name": "Curación",
@@ -80,7 +80,7 @@
           "resultPrompt": "You decided to heal:",
           "roles": ["healer"],
           "targets": ["innocent", "healer", "investigator", "killer"],
-          "duration": "10s"
+          "duration": "30s"
         },
         {
           "name": "Investigación",
@@ -89,7 +89,7 @@
           "resultPrompt": "You decided to investigate:",
           "roles": ["investigator"],
           "targets": ["innocent", "healer", "investigator", "killer"],
-          "duration": "10s"
+          "duration": "30s"
         },
         {
           "name": "Ejecución",
@@ -98,7 +98,7 @@
           "resultPrompt": "You decided to execute:",
           "roles": ["innocent", "healer", "investigator", "killer"],
           "targets": ["innocent", "healer", "investigator", "killer"],
-          "duration": "30s"
+          "duration": "3min"
         }
       ]
     },
@@ -173,7 +173,7 @@
           "resultPrompt": "You decided to try to kill:",
           "roles": ["killer"],
           "targets": ["innocent", "healer", "investigator"],
-          "duration": "10s"
+          "duration": "60s"
         },
         {
           "name": "Curación",
@@ -182,7 +182,7 @@
           "resultPrompt": "You decided to heal:",
           "roles": ["healer"],
           "targets": ["innocent", "healer", "investigator", "killer"],
-          "duration": "10s"
+          "duration": "30s"
         },
         {
           "name": "Investigación",
@@ -191,7 +191,7 @@
           "resultPrompt": "You decided to investigate:",
           "roles": ["investigator"],
           "targets": ["innocent", "healer", "investigator", "killer"],
-          "duration": "10s"
+          "duration": "30s"
         },
         {
           "name": "Ejecución",
@@ -200,7 +200,109 @@
           "resultPrompt": "You decided to execute:",
           "roles": ["innocent", "healer", "investigator", "killer"],
           "targets": ["innocent", "healer", "investigator", "killer"],
+          "duration": "3min"
+        }
+      ]
+    },
+    {
+      "name": "Odisea en la antigua Grecia",
+      "theme": "Antique",
+      "description": "En la antigua Grecia, Platón y sus seguidores se reúnen en una cena para discutir filosofía y política. Sin embargo, entre ellos se encuentran varios impostores que buscan desestabilizar el grupo y causar caos en la ciudad",
+      "image": "https://cdn.discordapp.com/attachments/1090001809717862430/1090487218029744269/cooldkind_grecia_antigua_varios_filosofos_y_platon_y_socrates_2499656c-fe4a-4f60-9e2f-22a55c52910c.png",
+      "roles": [
+        {
+          "name": "Filósofo",
+          "type": "innocent",
+          "description": "Un seguidor de Platón que busca mantener la paz y el orden en la cena",
+          "abilities": [
+            {
+              "name": "Votar",
+              "description": "Al ser un filósofo, pueden votar en el día para ejecutar a un miembro de la cena que sospechan que es un traidor"
+            }
+          ]
+        },
+        {
+          "name": "Médico",
+          "type": "healer",
+          "description": "Un médico que puede curar a alguien de ser asesinado por el asesino cada noche",
+          "abilities": [
+            {
+              "name": "Votar",
+              "description": "Al ser un filósofo, pueden votar en el día para ejecutar a un miembro de la cena que sospechan que es un traidor"
+            },
+            {
+              "name": "Curar",
+              "description": "En la noche, puede seleccionar a un filósofo para intentar curarlo (no sabe quien esta herido o no)"
+            }
+          ]
+        },
+        {
+          "name": "Sócrates",
+          "type": "investigator",
+          "description": "Un investigador astuto que puede interrogar a alguien cada noche para averiguar su rol",
+          "abilities": [
+            {
+              "name": "Votar",
+              "description": "Al ser un filósofo, pueden votar en el día para ejecutar a un miembro de la cena que sospechan que es un traidor"
+            },
+            {
+              "name": "Investigar",
+              "description": "En la noche, puede seleccionar a un filósofo para intentar averiguar su rol"
+            }
+          ]
+        },
+        {
+          "name": "Sofista",
+          "type": "killer",
+          "description": "Un impostor que busca engañar y manipular al grupo para su propio beneficio",
+          "abilities": [
+            {
+              "name": "Votar",
+              "description": "Al ser un filósofo, pueden votar en el día para ejecutar a un miembro de la cena que sospechan que es un traidor"
+            },
+            {
+              "name": "Matar",
+              "description": "En la noche, discuten con los demás asesinos para decidir a quien matar"
+            }
+          ]
+        }
+      ],
+      "stages": [
+        {
+          "name": "Matanza",
+          "type": "kill",
+          "description": "En la noche, los asesinos discuten entre ellos para decidir a quien matar",
+          "resultPrompt": "You decided to try to kill:",
+          "roles": ["killer"],
+          "targets": ["innocent", "healer", "investigator"],
+          "duration": "60s"
+        },
+        {
+          "name": "Salvación",
+          "type": "heal",
+          "description": "En la noche, el médico selecciona a un filósofo para intentar curarlo (no sabe quien esta herido o no)",
+          "resultPrompt": "You decided to heal:",
+          "roles": ["healer"],
+          "targets": ["innocent", "healer", "investigator", "killer"],
           "duration": "30s"
+        },
+        {
+          "name": "Demostración",
+          "type": "investigate",
+          "description": "En la noche, Sócrates selecciona a un filósofo para intentar averiguar su rol",
+          "resultPrompt": "You decided to investigate:",
+          "roles": ["investigator"],
+          "targets": ["innocent", "healer", "investigator", "killer"],
+          "duration": "30s"
+        },
+        {
+          "name": "Debate",
+          "type": "vote",
+          "description": "En el día, todos los filósofos votan para ejecutar a un miembro de la cena que sospechan que es un traidor",
+          "resultPrompt": "You decided to execute:",
+          "roles": ["innocent", "healer", "investigator", "killer"],
+          "targets": ["innocent", "healer", "investigator", "killer"],
+          "duration": "3min"
         }
       ]
     }

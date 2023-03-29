@@ -29,9 +29,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   const room = await getRoomDB(roomName).getObject<Room>("/");
 
-  // if (room.players.length < 4) {
-  //   throw new Error("La sala debe tener al menos 4 jugadores");
-  // }
+  if (room.players.length < 4) {
+    throw new Error("La sala debe tener al menos 4 jugadores");
+  }
 
   const roles = room.scenario.roles;
   const mafiaCount = Math.round(room.players.length / 4);

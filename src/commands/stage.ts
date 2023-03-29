@@ -65,8 +65,11 @@ async function killPlayer({
     .setTitle("Player died")
     .setColor(Colors.Red)
     .setDescription(
-      `The player ${guildMember} has died, whose role was: **${room.scenario.roles.find((role) => role.type === player.role)?.name
-      }**`
+      `The player ${guildMember} has died` +
+        (player.role === RoleType.Killer &&
+          `, whose role was: **${
+            room.scenario.roles.find((role) => role.type === player.role)?.name
+          }**`)
     );
 
   await generalChannel.send({ embeds: [deadPlayerEmbed] });
@@ -101,7 +104,7 @@ function collectorOnEnd({
 
     const result =
       playersWithMaxVotes[
-      Math.floor(Math.random() * playersWithMaxVotes.length)
+        Math.floor(Math.random() * playersWithMaxVotes.length)
       ];
 
     room = await getRoomDB(room.name).getObject<Room>("/");
@@ -225,7 +228,7 @@ export async function nextStage(
 
   const nextStageType = stagesOrder[
     (stagesOrder.indexOf(currentStage?.type || StageType.Vote) + 1) %
-    stagesOrder.length
+      stagesOrder.length
   ] as StageType;
 
   const stageScenario = room.scenario.stages.find(
@@ -255,12 +258,12 @@ export async function nextStage(
         .setColor(Colors.Yellow)
         .setDescription(
           "The night has passed\n" +
-          (playerKilled
-            ? `Someone tried to kill <@${playerKilled}>` +
-            (playerHealed === playerKilled
-              ? " but he was saved by the healer"
-              : " and no one saved him")
-            : "And everyone was safe")
+            (playerKilled
+              ? `Someone tried to kill <@${playerKilled}>` +
+                (playerHealed === playerKilled
+                  ? " but he was saved by the healer"
+                  : " and no one saved him")
+              : "And everyone was safe")
         )
     );
   }
@@ -287,6 +290,7 @@ export async function nextStage(
         )
     );
     await channel.send({ embeds });
+    await interaction.editReply({ content: "Game over" });
     await getRoomDB(room.name).push("/status", Status.Finished);
     return;
   }
@@ -303,6 +307,7 @@ export async function nextStage(
         )
     );
     await channel.send({ embeds });
+    await interaction.editReply({ content: "Game over" });
     await getRoomDB(room.name).push("/status", Status.Finished);
     return;
   }

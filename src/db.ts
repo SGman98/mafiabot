@@ -97,9 +97,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export async function getRooms() {
   try {
-    const roomNames = fs.readdirSync(path.join(__dirname, "../db/rooms")).filter(
-      (file) => file.endsWith(".json")
-    );
+    const roomNames = fs
+      .readdirSync(path.join(__dirname, "../db/rooms"))
+      .filter((file) => file.endsWith(".json"));
 
     return await Promise.all(
       roomNames.map(async (roomName) => {
