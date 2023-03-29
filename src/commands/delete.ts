@@ -16,8 +16,11 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   const channel = interaction.channel as TextChannel;
 
+  if (!channel.parent?.name.includes("room-")) {
+    throw new Error("You are not in a room");
+  }
   const roomName = channel.parent?.name.replace("room-", "");
-  if (!roomName) throw new Error("Room name not found");
+  if (!roomName) throw new Error("You are not in a room");
 
   const children = interaction.guild?.channels.cache.filter(
     (c) => c.parentId === channel.parentId

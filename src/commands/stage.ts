@@ -65,8 +65,7 @@ async function killPlayer({
     .setTitle("Player died")
     .setColor(Colors.Red)
     .setDescription(
-      `The player ${guildMember} has died, whose role was: **${
-        room.scenario.roles.find((role) => role.type === player.role)?.name
+      `The player ${guildMember} has died, whose role was: **${room.scenario.roles.find((role) => role.type === player.role)?.name
       }**`
     );
 
@@ -102,7 +101,7 @@ function collectorOnEnd({
 
     const result =
       playersWithMaxVotes[
-        Math.floor(Math.random() * playersWithMaxVotes.length)
+      Math.floor(Math.random() * playersWithMaxVotes.length)
       ];
 
     room = await getRoomDB(room.name).getObject<Room>("/");
@@ -226,7 +225,7 @@ export async function nextStage(
 
   const nextStageType = stagesOrder[
     (stagesOrder.indexOf(currentStage?.type || StageType.Vote) + 1) %
-      stagesOrder.length
+    stagesOrder.length
   ] as StageType;
 
   const stageScenario = room.scenario.stages.find(
@@ -256,17 +255,57 @@ export async function nextStage(
         .setColor(Colors.Yellow)
         .setDescription(
           "The night has passed\n" +
-            (playerKilled
-              ? `Someone tried to kill <@${playerKilled}>` +
-                (playerHealed === playerKilled
-                  ? " but he was saved by the healer"
-                  : " and no one saved him")
-              : "And everyone was safe")
+          (playerKilled
+            ? `Someone tried to kill <@${playerKilled}>` +
+            (playerHealed === playerKilled
+              ? " but he was saved by the healer"
+              : " and no one saved him")
+            : "And everyone was safe")
         )
     );
   }
 
-  // TODO: add game over logic
+  const aliveInnocents = room.players.filter(
+    (player) => player.role !== RoleType.Killer && player.role !== RoleType.Dead
+  );
+  const aliveKillers = room.players.filter(
+    (player) => player.role === RoleType.Killer
+  );
+
+  const channel = await getChannel({ interaction });
+  if (!channel) throw new Error("Could not find the channel");
+
+  if (aliveKillers.length === 0) {
+    embeds.push(
+      new EmbedBuilder()
+        .setTitle("Game over")
+        .setColor(Colors.Green)
+        .setDescription(
+          `The town won:\n\n${aliveInnocents
+            .map((player) => `<@${player.id}>`)
+            .join("\n")}`
+        )
+    );
+    await channel.send({ embeds });
+    await getRoomDB(room.name).push("/status", Status.Finished);
+    return;
+  }
+
+  if (aliveKillers.length >= aliveInnocents.length) {
+    embeds.push(
+      new EmbedBuilder()
+        .setTitle("Game over")
+        .setColor(Colors.Red)
+        .setDescription(
+          `The killers won:\n\n${aliveKillers
+            .map((player) => `<@${player.id}>`)
+            .join("\n")}`
+        )
+    );
+    await channel.send({ embeds });
+    await getRoomDB(room.name).push("/status", Status.Finished);
+    return;
+  }
 
   const newStage: Stage = {
     name: `${stageScenario.name} - Day ${nextDay}`,
@@ -298,9 +337,6 @@ export async function nextStage(
           .join(", "),
       })
   );
-
-  const channel = await getChannel({ interaction });
-  if (!channel) throw new Error("Could not find the channel");
 
   await channel.send({ embeds });
   console.log(`Stage started: ${newStage.name}`);
@@ -420,12 +456,17 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   const subcommand = interaction.options.getSubcommand();
 
   if (subcommand === "next") {
-    if (room.status === Status.Playing)
+    if (room.status === Status.Playing) {
       await nextStage(interaction, room, currentStage);
-    else
+    } else if (room.status === Status.Finished) {
+      await interaction.editReply({
+        content: "The game is finished",
+      });
+    } else {
       await interaction.editReply({
         content:
           "It is not possible to start a stage first you have to start the game /start",
       });
+    }
   }
 }
